@@ -8,24 +8,20 @@ package net.nanquanyuhao.metworkanalysis;/**
  * Created by wushengran on 2020/11/16 9:31
  */
 
-import akka.protobuf.ByteString;
 import net.nanquanyuhao.metworkanalysis.beans.ApacheLogEvent;
 import net.nanquanyuhao.metworkanalysis.beans.PageViewCount;
 import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.AggregateFunction;
-import org.apache.flink.api.common.state.ListState;
-import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.api.common.state.MapState;
 import org.apache.flink.api.common.state.MapStateDescriptor;
+import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.shaded.guava18.com.google.common.collect.Lists;
-import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
-import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
 import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
 import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
@@ -33,7 +29,6 @@ import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
 
-import java.net.URL;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
@@ -71,8 +66,8 @@ public class HotPages {
                         WatermarkStrategy.<ApacheLogEvent>forBoundedOutOfOrderness(Duration.ofSeconds(1))
                                 .withTimestampAssigner(new SerializableTimestampAssigner<ApacheLogEvent>() {
                                     @Override
-                                    public long extractTimestamp(ApacheLogEvent var1, long var2) {
-                                        return var1.getTimestamp();
+                                    public long extractTimestamp(ApacheLogEvent apacheLogEvent, long l) {
+                                        return apacheLogEvent.getTimestamp();
                                     }
                                 }));
 
@@ -81,17 +76,26 @@ public class HotPages {
         // 分组开窗聚合
 
         // 定义一个侧输出流标签
-        OutputTag<ApacheLogEvent> lateTag = new OutputTag<ApacheLogEvent>("late"){};
+        OutputTag<ApacheLogEvent> lateTag = new OutputTag<ApacheLogEvent>("late") {
+        };
 
         SingleOutputStreamOperator<PageViewCount> windowAggStream = dataStream
-                .filter(data -> "GET".equals(data.getMethod()))    // 过滤get请求
+                // 过滤get请求
+                .filter(data -> "GET".equals(data.getMethod()))
+                // 过滤掉静态资源请求
                 .filter(data -> {
                     String regex = "^((?!\\.(css|js|png|ico)$).)*$";
                     return Pattern.matches(regex, data.getUrl());
                 })
-                .keyBy(ApacheLogEvent::getUrl)    // 按照url分组
+                // 按照url分组
+                .keyBy(new KeySelector<ApacheLogEvent, String>() {
+                    @Override
+                    public String getKey(ApacheLogEvent apacheLogEvent) throws Exception {
+                        return apacheLogEvent.getUrl();
+                    }
+                })
                 // .timeWindow(Time.minutes(10), Time.seconds(5))
-                .window(SlidingEventTimeWindows.of(Time.minutes(10), Time.minutes(5)))
+                .window(SlidingEventTimeWindows.of(Time.minutes(10), Time.seconds(5)))
                 .allowedLateness(Time.minutes(1))
                 .sideOutputLateData(lateTag)
                 .aggregate(new PageCountAgg(), new PageCountResult());
@@ -101,7 +105,12 @@ public class HotPages {
 
         // 收集同一窗口count数据，排序输出
         DataStream<String> resultStream = windowAggStream
-                .keyBy(PageViewCount::getWindowEnd)
+                .keyBy(new KeySelector<PageViewCount, Long>() {
+                    @Override
+                    public Long getKey(PageViewCount pageViewCount) throws Exception {
+                        return pageViewCount.getWindowEnd();
+                    }
+                })
                 .process(new TopNHotPages(3));
 
         resultStream.print();
@@ -171,7 +180,7 @@ public class HotPages {
         @Override
         public void onTimer(long timestamp, OnTimerContext ctx, Collector<String> out) throws Exception {
             // 先判断是否到了窗口关闭清理时间，如果是，直接清空状态返回
-            if( timestamp == ctx.getCurrentKey() + 60 * 1000L ){
+            if (timestamp == ctx.getCurrentKey() + 60 * 1000L) {
                 pageViewCountMapState.clear();
                 return;
             }
@@ -181,9 +190,9 @@ public class HotPages {
             pageViewCounts.sort(new Comparator<Map.Entry<String, Long>>() {
                 @Override
                 public int compare(Map.Entry<String, Long> o1, Map.Entry<String, Long> o2) {
-                    if(o1.getValue() > o2.getValue())
+                    if (o1.getValue() > o2.getValue())
                         return -1;
-                    else if(o1.getValue() < o2.getValue())
+                    else if (o1.getValue() < o2.getValue())
                         return 1;
                     else
                         return 0;

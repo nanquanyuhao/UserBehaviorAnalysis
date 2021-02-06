@@ -16,6 +16,7 @@ import org.apache.flink.api.common.functions.AggregateFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
+import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -71,10 +72,16 @@ public class PageView {
                         .map(new MapFunction<UserBehavior, Tuple2<String, Long>>() {
                             @Override
                             public Tuple2<String, Long> map(UserBehavior value) throws Exception {
+                                // 开窗前必须先分组，故重组数据结构，默认对同一值“pv”进行分组
                                 return new Tuple2<>("pv", 1L);
                             }
                         })
-                        .keyBy(value -> value.f0)    // 按商品ID分组
+                        .keyBy(new KeySelector<Tuple2<String, Long>, String>() {
+                            @Override
+                            public String getKey(Tuple2<String, Long> stringLongTuple2) throws Exception {
+                                return stringLongTuple2.f0;
+                            }
+                        })    // 按商品ID分组
                         .window(TumblingEventTimeWindows.of(Time.hours(1)))    // 开1小时滚动窗口
                         .sum(1);
 
@@ -84,16 +91,27 @@ public class PageView {
                     @Override
                     public Tuple2<Integer, Long> map(UserBehavior value) throws Exception {
                         Random random = new Random();
+                        // 开窗前必须先分组，重组数据结构，使用不同键
                         return new Tuple2<>(random.nextInt(10), 1L);
                     }
                 })
-                .keyBy(data -> data.f0)
+                .keyBy(new KeySelector<Tuple2<Integer, Long>, Integer>() {
+                    @Override
+                    public Integer getKey(Tuple2<Integer, Long> integerLongTuple2) throws Exception {
+                        return integerLongTuple2.f0;
+                    }
+                })
                 .window(TumblingEventTimeWindows.of(Time.hours(1)))
                 .aggregate(new PvCountAgg(), new PvCountResult());
 
-        // 将各分区数据汇总起来
+        // 将各分区数据依照窗口关闭时间汇总起来，多并行分支下最终需要结果合并
         DataStream<PageViewCount> pvResultStream = pvStream
-                .keyBy(PageViewCount::getWindowEnd)
+                .keyBy(new KeySelector<PageViewCount, Long>() {
+                    @Override
+                    public Long getKey(PageViewCount pageViewCount) throws Exception {
+                        return pageViewCount.getWindowEnd();
+                    }
+                })
                 .process(new TotalPvCount());
 //                .sum("count");
 
@@ -149,6 +167,7 @@ public class PageView {
                 totalCountState.update(0L);
             }
             totalCountState.update(totalCountState.value() + value.getCount());
+            // 注册定时器，时间窗口到达 1ms 后触发 onTimer
             ctx.timerService().registerEventTimeTimer(value.getWindowEnd() + 1);
         }
 

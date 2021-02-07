@@ -1,4 +1,4 @@
-package net.nanquanyuhao.metworkanalysis;/**
+package net.nanquanyuhao.networkanalysis;/**
  * Copyright (c) 2018-2028 尚硅谷 All Rights Reserved
  * <p>
  * Project: UserBehaviorAnalysis
@@ -8,8 +8,8 @@ package net.nanquanyuhao.metworkanalysis;/**
  * Created by wushengran on 2020/11/16 11:46
  */
 
-import net.nanquanyuhao.metworkanalysis.beans.PageViewCount;
-import net.nanquanyuhao.metworkanalysis.beans.UserBehavior;
+import net.nanquanyuhao.networkanalysis.beans.PageViewCount;
+import net.nanquanyuhao.networkanalysis.beans.UserBehavior;
 import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.AggregateFunction;

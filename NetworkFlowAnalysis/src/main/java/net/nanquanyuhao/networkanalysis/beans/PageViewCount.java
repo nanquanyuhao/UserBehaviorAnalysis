@@ -1,4 +1,4 @@
-package net.nanquanyuhao.metworkanalysis.beans;/**
+package net.nanquanyuhao.networkanalysis.beans;/**
  * Copyright (c) 2018-2028 尚硅谷 All Rights Reserved
  * <p>
  * Project: UserBehaviorAnalysis

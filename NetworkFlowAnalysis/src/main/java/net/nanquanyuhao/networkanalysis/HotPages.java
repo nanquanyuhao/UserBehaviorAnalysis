@@ -32,8 +32,8 @@ import org.apache.flink.util.OutputTag;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -185,7 +185,7 @@ public class HotPages {
                 return;
             }
 
-            ArrayList<Map.Entry<String, Long>> pageViewCounts = Lists.newArrayList(pageViewCountMapState.entries());
+            List<Map.Entry<String, Long>> pageViewCounts = Lists.newArrayList(pageViewCountMapState.entries());
 
             pageViewCounts.sort(new Comparator<Map.Entry<String, Long>>() {
                 @Override

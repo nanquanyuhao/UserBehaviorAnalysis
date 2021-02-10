@@ -35,6 +35,7 @@ import java.time.Duration;
  * @Version: 1.0
  */
 public class UvWithBloomFilter {
+
     public static void main(String[] args) throws Exception {
         // 1. 创建执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -42,7 +43,7 @@ public class UvWithBloomFilter {
         // env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
         // 2. 读取数据，创建DataStream
-        URL resource = UniqueVisitor.class.getResource("/UserBehavior.csv");
+        URL resource = UvWithBloomFilter.class.getResource("/UserBehavior.csv");
         DataStream<String> inputStream = env.readTextFile(resource.getPath());
 
         // 3. 转换为POJO，分配时间戳和watermark

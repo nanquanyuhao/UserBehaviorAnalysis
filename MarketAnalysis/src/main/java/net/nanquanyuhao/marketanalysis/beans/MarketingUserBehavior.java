@@ -15,6 +15,7 @@ package net.nanquanyuhao.marketanalysis.beans;/**
  * @Version: 1.0
  */
 public class MarketingUserBehavior {
+
     private Long userId;
     private String behavior;
     private String channel;

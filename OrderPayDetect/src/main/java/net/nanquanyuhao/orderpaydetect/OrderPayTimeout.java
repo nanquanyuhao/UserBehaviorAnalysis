@@ -50,7 +50,7 @@ public class OrderPayTimeout {
                     return new OrderEvent(new Long(fields[0]), fields[1], fields[2], new Long(fields[3]));
                 })
                 .assignTimestampsAndWatermarks(
-                        WatermarkStrategy.<OrderEvent>forBoundedOutOfOrderness(Duration.ofSeconds(0))
+                        WatermarkStrategy.<OrderEvent>forMonotonousTimestamps()
                                 .withTimestampAssigner(new SerializableTimestampAssigner<OrderEvent>() {
                                     @Override
                                     public long extractTimestamp(OrderEvent orderEvent, long l) {

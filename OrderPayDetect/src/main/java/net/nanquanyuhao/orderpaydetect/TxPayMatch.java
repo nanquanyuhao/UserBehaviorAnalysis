@@ -54,7 +54,7 @@ public class TxPayMatch {
                     return new OrderEvent(new Long(fields[0]), fields[1], fields[2], new Long(fields[3]));
                 })
                 .assignTimestampsAndWatermarks(
-                        WatermarkStrategy.<OrderEvent>forBoundedOutOfOrderness(Duration.ofSeconds(0))
+                        WatermarkStrategy.<OrderEvent>forMonotonousTimestamps()
                                 .withTimestampAssigner(new SerializableTimestampAssigner<OrderEvent>() {
                                     @Override
                                     public long extractTimestamp(OrderEvent orderEvent, long l) {
@@ -71,7 +71,7 @@ public class TxPayMatch {
                     return new ReceiptEvent(fields[0], fields[1], new Long(fields[2]));
                 })
                 .assignTimestampsAndWatermarks(
-                        WatermarkStrategy.<ReceiptEvent>forBoundedOutOfOrderness(Duration.ofSeconds(0))
+                        WatermarkStrategy.<ReceiptEvent>forMonotonousTimestamps()
                                 .withTimestampAssigner(new SerializableTimestampAssigner<ReceiptEvent>() {
                                     @Override
                                     public long extractTimestamp(ReceiptEvent receiptEvent, long l) {

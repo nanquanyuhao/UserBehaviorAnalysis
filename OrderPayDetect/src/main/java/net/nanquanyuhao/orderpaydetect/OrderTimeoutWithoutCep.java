@@ -23,7 +23,6 @@ import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
 
 import java.net.URL;
-import java.time.Duration;
 
 /**
  * @ClassName: OrderTimeoutWithoutCep
@@ -49,7 +48,7 @@ public class OrderTimeoutWithoutCep {
                     return new OrderEvent(new Long(fields[0]), fields[1], fields[2], new Long(fields[3]));
                 })
                 .assignTimestampsAndWatermarks(
-                        WatermarkStrategy.<OrderEvent>forBoundedOutOfOrderness(Duration.ofSeconds(0))
+                        WatermarkStrategy.<OrderEvent>forMonotonousTimestamps()
                                 .withTimestampAssigner(new SerializableTimestampAssigner<OrderEvent>() {
                                     @Override
                                     public long extractTimestamp(OrderEvent orderEvent, long l) {

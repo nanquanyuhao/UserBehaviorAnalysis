@@ -19,8 +19,6 @@ import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.types.Row;
 
-import java.time.Duration;
-
 import static org.apache.flink.table.api.Expressions.$;
 import static org.apache.flink.table.api.Expressions.lit;
 
@@ -47,7 +45,7 @@ public class HotItemsWithSql {
                     return new UserBehavior(new Long(fields[0]), new Long(fields[1]), new Integer(fields[2]), fields[3], new Long(fields[4]));
                 })
                 .assignTimestampsAndWatermarks(
-                        WatermarkStrategy.<UserBehavior>forBoundedOutOfOrderness(Duration.ofSeconds(0))
+                        WatermarkStrategy.<UserBehavior>forMonotonousTimestamps()
                                 .withTimestampAssigner(new SerializableTimestampAssigner<UserBehavior>() {
                                     @Override
                                     public long extractTimestamp(UserBehavior var1, long var2) {

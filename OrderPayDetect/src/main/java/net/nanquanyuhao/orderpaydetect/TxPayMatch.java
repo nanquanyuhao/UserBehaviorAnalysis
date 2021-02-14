@@ -24,7 +24,6 @@ import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
 
 import java.net.URL;
-import java.time.Duration;
 
 /**
  * @ClassName: TxPayMatch

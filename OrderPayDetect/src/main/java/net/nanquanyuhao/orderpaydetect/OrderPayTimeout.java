@@ -25,7 +25,6 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.util.OutputTag;
 
 import java.net.URL;
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 

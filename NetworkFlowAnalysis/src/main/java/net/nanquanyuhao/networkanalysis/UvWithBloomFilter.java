@@ -26,7 +26,6 @@ import org.apache.flink.util.Collector;
 import redis.clients.jedis.Jedis;
 
 import java.net.URL;
-import java.time.Duration;
 
 /**
  * @ClassName: UvWithBloomFilter
@@ -53,7 +52,7 @@ public class UvWithBloomFilter {
                     return new UserBehavior(new Long(fields[0]), new Long(fields[1]), new Integer(fields[2]), fields[3], new Long(fields[4]));
                 })
                 .assignTimestampsAndWatermarks(
-                        WatermarkStrategy.<UserBehavior>forBoundedOutOfOrderness(Duration.ofSeconds(0))
+                        WatermarkStrategy.<UserBehavior>forMonotonousTimestamps()
                                 .withTimestampAssigner(new SerializableTimestampAssigner<UserBehavior>() {
                                     @Override
                                     public long extractTimestamp(UserBehavior var1, long var2) {

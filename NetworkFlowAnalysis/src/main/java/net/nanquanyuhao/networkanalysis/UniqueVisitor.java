@@ -22,7 +22,6 @@ import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;
 
 import java.net.URL;
-import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -51,7 +50,7 @@ public class UniqueVisitor {
                     return new UserBehavior(new Long(fields[0]), new Long(fields[1]), new Integer(fields[2]), fields[3], new Long(fields[4]));
                 })
                 .assignTimestampsAndWatermarks(
-                        WatermarkStrategy.<UserBehavior>forBoundedOutOfOrderness(Duration.ofSeconds(0))
+                        WatermarkStrategy.<UserBehavior>forMonotonousTimestamps()
                                 .withTimestampAssigner(new SerializableTimestampAssigner<UserBehavior>() {
                                     @Override
                                     public long extractTimestamp(UserBehavior var1, long var2) {

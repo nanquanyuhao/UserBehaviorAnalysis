@@ -26,7 +26,6 @@ import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;
 
 import java.sql.Timestamp;
-import java.time.Duration;
 
 /**
  * @ClassName: AppMarketingStatistics
@@ -44,7 +43,7 @@ public class AppMarketingStatistics {
         // 1. 从自定义数据源中读取数据
         DataStream<MarketingUserBehavior> dataStream = env.addSource(new AppMarketingByChannel.SimulatedMarketingUserBehaviorSource())
                 .assignTimestampsAndWatermarks(
-                        WatermarkStrategy.<MarketingUserBehavior>forBoundedOutOfOrderness(Duration.ofSeconds(0))
+                        WatermarkStrategy.<MarketingUserBehavior>forMonotonousTimestamps()
                                 .withTimestampAssigner(new SerializableTimestampAssigner<MarketingUserBehavior>() {
 
                                     @Override

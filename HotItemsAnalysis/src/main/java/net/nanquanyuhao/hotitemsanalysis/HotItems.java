@@ -30,7 +30,6 @@ import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.util.Collector;
 
 import java.sql.Timestamp;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Properties;
@@ -73,7 +72,7 @@ public class HotItems {
                     }
                 })*/
                 .assignTimestampsAndWatermarks(
-                        WatermarkStrategy.<UserBehavior>forBoundedOutOfOrderness(Duration.ofSeconds(0))
+                        WatermarkStrategy.<UserBehavior>forMonotonousTimestamps()
                                 .withTimestampAssigner(new SerializableTimestampAssigner<UserBehavior>() {
                                     @Override
                                     public long extractTimestamp(UserBehavior var1, long var2) {

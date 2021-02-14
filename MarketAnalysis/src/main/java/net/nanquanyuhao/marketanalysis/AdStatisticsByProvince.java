@@ -32,7 +32,6 @@ import org.apache.flink.util.OutputTag;
 
 import java.net.URL;
 import java.sql.Timestamp;
-import java.time.Duration;
 
 /**
  * @ClassName: AdStatisticsByProvince
@@ -56,7 +55,7 @@ public class AdStatisticsByProvince {
                     return new AdClickEvent(new Long(fields[0]), new Long(fields[1]), fields[2], fields[3], new Long(fields[4]));
                 })
                 .assignTimestampsAndWatermarks(
-                        WatermarkStrategy.<AdClickEvent>forBoundedOutOfOrderness(Duration.ofSeconds(0))
+                        WatermarkStrategy.<AdClickEvent>forMonotonousTimestamps()
                                 .withTimestampAssigner(new SerializableTimestampAssigner<AdClickEvent>() {
                                     @Override
                                     public long extractTimestamp(AdClickEvent adClickEvent, long l) {
